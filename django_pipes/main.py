@@ -99,6 +99,11 @@ class PipeManager(object):
                 url_string += "?%s" % urllib.urlencode(params)
             _log("Fetching: %s" % url_string)
             url_string = url_string.replace(" ",'')
+
+            if hasattr(self.pipe, 'headers'):
+                headers = self.pipe.headers
+            else:
+                headers = {}
             
             start = time()
             # Try the cache first
@@ -116,7 +121,8 @@ class PipeManager(object):
                 while True:
                     try:
                         attempts += 1
-                        respObj = urllib2.urlopen(url_string)
+                        req = urllib2.Request(url_string, headers=headers)
+                        respObj = urllib2.urlopen(req)
                         break
                     except urllib2.HTTPError, e:
                         stop = time()
@@ -162,8 +168,15 @@ class PipeManager(object):
             url_string = self.pipe.uri
             post_params = urllib.urlencode(obj.items)
             _log("Posting to: %s" % url_string)
+
+            if hasattr(self.pipe, 'headers'):
+                headers = self.pipe.headers
+            else:
+                headers = {}
+
             try:
-                resp = urllib2.urlopen(urllib2.Request(url_string, post_params))
+                req = urllib2.Request(url_string, post_params, headers=headers)
+                resp = urllib2.urlopen(req)
             except urllib2.HTTPError, e:
                 raise ObjectNotSavedException(code=e.code, resp=e.read())
             except urllib2.URLError, e:
